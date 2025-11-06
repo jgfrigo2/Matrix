@@ -1,0 +1,7 @@
+{
+  "name": "Matrix AI Portal",
+  "description": "An AI-powered portal to the Matrix universe. Ask any question via text or have a real-time voice conversation to explore the lore, characters, and philosophy of The Matrix. Features a high-power 'Thinking Mode' for deep inquiries.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
