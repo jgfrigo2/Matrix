@@ -33,40 +33,41 @@ const App: React.FC = () => {
       <div className="min-h-screen w-full text-[#00FF41] flex flex-col relative">
         <MatrixBackground />
         <div className="min-h-screen w-full flex flex-col z-10 bg-black/90 backdrop-blur-sm items-center justify-center p-4">
-          <div className="w-full max-w-3xl text-center border-2 border-red-500/50 p-6 md:p-8 rounded-lg shadow-[0_0_20px_rgba(255,80,80,0.4)] bg-black/50">
-            <h1 className="text-2xl md:text-4xl font-bold text-red-500 mb-4 tracking-widest">
+          <div className="w-full max-w-4xl text-left border-2 border-red-500/50 p-6 md:p-8 rounded-lg shadow-[0_0_20px_rgba(255,80,80,0.4)] bg-black/50">
+            <h1 className="text-2xl md:text-4xl font-bold text-red-500 mb-4 tracking-widest text-center">
               CONNECTION FAILED
             </h1>
-            <p className="text-lg mb-3">
+            <p className="text-lg mb-3 text-center">
               The Oracle cannot be reached. The{' '}
               <code className="bg-[#0D0D0D] text-red-400 px-2 py-1 rounded border border-red-500/30">
                 API_KEY
               </code>{' '}
-              is missing from the environment.
+              is not accessible to the application.
             </p>
-            <p className="text-base text-gray-400 mb-6">
-              This portal requires a secure connection to the Gemini mainframe, which is authenticated via an API key. Your deployment environment has not provided this key to the application.
+            <p className="text-base text-gray-400 mb-6 text-center">
+              This portal requires a secure connection to the Gemini mainframe. Even if you've set the API key in your hosting provider's settings, it may not be correctly exposed to the client-side code.
             </p>
             <div className="text-left bg-[#0D0D0D]/70 p-4 rounded border border-[#008F11]/50">
-              <h2 className="text-xl font-bold mb-3 text-center">Action Required</h2>
-              <ol className="list-decimal list-inside space-y-2 text-gray-300">
+              <h2 className="text-xl font-bold mb-3 text-center">Troubleshooting Steps</h2>
+              <ol className="list-decimal list-inside space-y-3 text-gray-300">
                 <li>
-                  Go to your project's dashboard on your hosting provider (e.g., Netlify).
+                  <strong>Verify Environment Variable:</strong> In your hosting provider's settings (e.g., Netlify), ensure you have an environment variable named{' '}
+                  <code className="bg-black p-1 rounded font-bold text-[#00FF41]">API_KEY</code> with your correct Google Gemini API key as the value.
                 </li>
                 <li>
-                  Navigate to the{' '}
-                  <strong>Site configuration &gt; Environment variables</strong>{' '}
-                  section.
+                  <strong>Client-Side Access (Crucial Step):</strong> Frontend applications running in a browser cannot directly access server environment variables. Your build process must be configured to embed the key.
+                  <ul className="list-disc list-inside mt-2 pl-4 text-gray-400 space-y-1">
+                    <li>If you are using a tool like <strong>Vite</strong>, you typically need to prefix your variable with <code className="bg-black p-1 rounded">VITE_</code> (e.g., <code className="bg-black p-1 rounded">VITE_API_KEY</code>) in your Netlify settings and then access it via <code className="bg-black p-1 rounded">import.meta.env.VITE_API_KEY</code> in your code.</li>
+                    <li>If you are using <strong>Create React App</strong>, the prefix is <code className="bg-black p-1 rounded">REACT_APP_</code>.</li>
+                  </ul>
+                  <div className="mt-3 p-3 rounded border border-yellow-400/30 bg-yellow-900/20">
+                    <p className="text-yellow-300/90">
+                      <span className="font-bold">Important Note:</span> This application is coded to specifically look for <code className="bg-black p-1 rounded font-bold text-[#00FF41]">process.env.API_KEY</code>. You will likely need to adjust your build configuration to make your environment variable available under this specific name. For example, with Vite, you could add a `define` property to your `vite.config.js` to replace `process.env.API_KEY` with your `import.meta.env.VITE_API_KEY`.
+                    </p>
+                  </div>
                 </li>
                 <li>
-                  Create a new variable with the key{' '}
-                  <code className="bg-black p-1 rounded font-bold text-[#00FF41]">API_KEY</code>.
-                </li>
-                <li>
-                  Paste your Google Gemini API key as the value.
-                </li>
-                <li>
-                  <strong>Redeploy</strong> your application to apply the changes.
+                  <strong>Redeploy:</strong> After confirming your environment variables and build configuration, you must <strong>redeploy</strong> your application for the changes to take effect.
                 </li>
               </ol>
             </div>
