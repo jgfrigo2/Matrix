@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 
 const MatrixBackground: React.FC = () => {
@@ -15,8 +14,8 @@ const MatrixBackground: React.FC = () => {
     let height = (canvas.height = window.innerHeight);
     
     const columns = Math.floor(width / 20);
-    // Fix: Explicitly type `drops` as an array of numbers to resolve arithmetic operation errors.
-    const drops: number[] = Array.from({ length: columns }).fill(1);
+    // Fix: Use `Array(columns).fill(1)` to correctly initialize `drops` as `number[]`, resolving the type error.
+    const drops: number[] = Array(columns).fill(1);
     const characters = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789';
 
     const draw = () => {
