@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { ChatMessage } from '../types';
 import Message from './Message';
@@ -5,7 +6,11 @@ import { SendIcon } from './icons';
 import { createChatSession } from '../services/geminiService';
 import type { Chat } from '@google/genai';
 
-const ChatView: React.FC = () => {
+interface ChatViewProps {
+  onApiKeyError: () => void;
+}
+
+const ChatView: React.FC<ChatViewProps> = ({ onApiKeyError }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -41,19 +46,22 @@ const ChatView: React.FC = () => {
         chatSessionRef.current = createChatSession(isThinkingMode);
       }
       
-      // Fix: The sendMessage method expects an object with a `message` property.
       const result = await chatSessionRef.current.sendMessage({ message: input });
       const modelMessage: ChatMessage = { role: 'model', text: result.text };
       setMessages(prev => [...prev, modelMessage]);
 
     } catch (error) {
       console.error('Gemini API error:', error);
+      if (error instanceof Error && error.message.includes('Requested entity was not found.')) {
+        onApiKeyError();
+        return; // Exit without showing an error message in chat
+      }
       const errorMessage: ChatMessage = { role: 'model', text: 'Error: Connection to the Matrix failed. Please try again.' };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, isThinkingMode]);
+  }, [input, isLoading, isThinkingMode, onApiKeyError]);
   
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

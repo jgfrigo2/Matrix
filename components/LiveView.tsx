@@ -8,7 +8,11 @@ import { TranscriptEntry } from '../types';
 
 type ConnectionState = 'IDLE' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
 
-const LiveView: React.FC = () => {
+interface LiveViewProps {
+    onApiKeyError: () => void;
+}
+
+const LiveView: React.FC<LiveViewProps> = ({ onApiKeyError }) => {
     const [connectionState, setConnectionState] = useState<ConnectionState>('IDLE');
     const [transcripts, setTranscripts] = useState<TranscriptEntry[]>([]);
     
@@ -25,6 +29,26 @@ const LiveView: React.FC = () => {
     const currentInputTranscriptionRef = useRef('');
     const currentOutputTranscriptionRef = useRef('');
 
+    const stopSession = useCallback(() => {
+        if (sessionPromiseRef.current) {
+            sessionPromiseRef.current.then(session => session.close());
+            sessionPromiseRef.current = null;
+        }
+
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+        scriptProcessorRef.current?.disconnect();
+        mediaStreamSourceRef.current?.disconnect();
+        
+        audioSourcesRef.current.forEach(source => source.stop());
+        audioSourcesRef.current.clear();
+        nextStartTimeRef.current = 0;
+
+        audioContextRef.current?.close().catch(console.error);
+        outputAudioContextRef.current?.close().catch(console.error);
+
+        setConnectionState('IDLE');
+    }, []);
+
     const startSession = useCallback(async () => {
         setConnectionState('CONNECTING');
         setTranscripts([]);
@@ -37,9 +61,7 @@ const LiveView: React.FC = () => {
 
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-            // Fix: Cast window to `any` to allow access to vendor-prefixed webkitAudioContext for broader browser compatibility.
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-            // Fix: Cast window to `any` to allow access to vendor-prefixed webkitAudioContext for broader browser compatibility.
             outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
 
             sessionPromiseRef.current = ai.live.connect({
@@ -104,7 +126,6 @@ const LiveView: React.FC = () => {
                             nextStartTimeRef.current += audioBuffer.duration;
                         }
 
-                        // Fix: Add handling for interrupted messages to stop audio playback immediately.
                         const interrupted = message.serverContent?.interrupted;
                         if (interrupted) {
                             for (const source of audioSourcesRef.current.values()) {
@@ -116,7 +137,11 @@ const LiveView: React.FC = () => {
                     },
                     onerror: (e: ErrorEvent) => {
                         console.error('Live session error:', e);
-                        setConnectionState('ERROR');
+                        if (e.message.includes('Requested entity was not found.')) {
+                            onApiKeyError();
+                        } else {
+                            setConnectionState('ERROR');
+                        }
                         stopSession();
                     },
                     onclose: () => {
@@ -125,38 +150,24 @@ const LiveView: React.FC = () => {
                 }
             });
 
+            await sessionPromiseRef.current; // Wait for connection to establish or fail.
+
         } catch (err) {
             console.error("Failed to start session:", err);
+            if (err instanceof Error && err.message.includes('Requested entity was not found.')) {
+              onApiKeyError();
+              stopSession(); // Clean up any partial setup
+              return;
+            }
             setConnectionState('ERROR');
         }
-    }, []);
-
-    const stopSession = useCallback(() => {
-        if (sessionPromiseRef.current) {
-            sessionPromiseRef.current.then(session => session.close());
-            sessionPromiseRef.current = null;
-        }
-
-        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
-        scriptProcessorRef.current?.disconnect();
-        mediaStreamSourceRef.current?.disconnect();
-        
-        audioSourcesRef.current.forEach(source => source.stop());
-        audioSourcesRef.current.clear();
-        nextStartTimeRef.current = 0;
-
-        audioContextRef.current?.close().catch(console.error);
-        outputAudioContextRef.current?.close().catch(console.error);
-
-        setConnectionState('IDLE');
-    }, []);
+    }, [stopSession, onApiKeyError]);
 
     useEffect(() => {
         return () => {
             stopSession();
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [stopSession]);
 
     const isSessionActive = connectionState === 'CONNECTING' || connectionState === 'CONNECTED';
 
@@ -181,8 +192,8 @@ const LiveView: React.FC = () => {
                 onClick={isSessionActive ? stopSession : startSession}
                 className={`px-8 py-4 border-2 rounded-full text-lg font-bold transition-all duration-300 flex items-center gap-3
                 ${isSessionActive
-                    ? 'bg-red-500 border-red-500 text-black hover:bg-red-600'
-                    : 'bg-[#00FF41] border-[#00FF41] text-black hover:bg-green-400'
+                    ? 'bg-red-500 border-red-500 text-black hover:bg-red-600 shadow-[0_0_10px_rgba(255,80,80,0.5)]'
+                    : 'bg-[#00FF41] border-[#00FF41] text-black hover:bg-green-400 shadow-[0_0_10px_rgba(0,255,65,0.5)]'
                 }
                 `}
             >
