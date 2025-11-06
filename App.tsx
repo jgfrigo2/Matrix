@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import ChatView from './components/ChatView';
 import LiveView from './components/LiveView';
 import { Header } from './components/Header';
 import { BrainCircuitIcon, MicIcon } from './components/icons';
+import MatrixBackground from './components/MatrixBackground';
 
 type ViewMode = 'chat' | 'live';
 
@@ -19,28 +19,27 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen w-full bg-black text-[#00FF41] font-mono flex flex-col"
-      style={{
-        backgroundImage: 'radial-gradient(rgba(0, 143, 17, 0.15) 1px, transparent 1px)',
-        backgroundSize: '20px 20px'
-      }}
+      className="min-h-screen w-full text-[#00FF41] flex flex-col relative"
     >
-      <Header />
-      <div className="flex justify-center p-4 border-b-2 border-[#008F11]">
-        <div className="flex space-x-4">
-          <button onClick={() => setViewMode('chat')} className={getButtonClass('chat')}>
-            <BrainCircuitIcon className="h-5 w-5" />
-            <span>Text Query</span>
-          </button>
-          <button onClick={() => setViewMode('live')} className={getButtonClass('live')}>
-            <MicIcon className="h-5 w-5" />
-            <span>Live Conversation</span>
-          </button>
+      <MatrixBackground />
+      <div className="min-h-screen w-full flex flex-col z-10 bg-black/80 backdrop-blur-[1px]">
+        <Header />
+        <div className="flex justify-center p-4 border-b-2 border-[#008F11]">
+          <div className="flex space-x-4">
+            <button onClick={() => setViewMode('chat')} className={getButtonClass('chat')}>
+              <BrainCircuitIcon className="h-5 w-5" />
+              <span>Text Query</span>
+            </button>
+            <button onClick={() => setViewMode('live')} className={getButtonClass('live')}>
+              <MicIcon className="h-5 w-5" />
+              <span>Live Conversation</span>
+            </button>
+          </div>
         </div>
+        <main className="flex-grow flex flex-col p-4 md:p-6 overflow-hidden">
+          {viewMode === 'chat' ? <ChatView /> : <LiveView />}
+        </main>
       </div>
-      <main className="flex-grow flex flex-col p-4 md:p-6 overflow-hidden">
-        {viewMode === 'chat' ? <ChatView /> : <LiveView />}
-      </main>
     </div>
   );
 };

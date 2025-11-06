@@ -42,7 +42,8 @@ const ChatView: React.FC = () => {
         chatSessionRef.current = createChatSession(isThinkingMode);
       }
       
-      const result = await chatSessionRef.current.sendMessage(input);
+      // Fix: The sendMessage method expects an object with a `message` property.
+      const result = await chatSessionRef.current.sendMessage({ message: input });
       const modelMessage: ChatMessage = { role: 'model', text: result.text };
       setMessages(prev => [...prev, modelMessage]);
 
