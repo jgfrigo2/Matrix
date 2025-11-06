@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { ChatMessage } from '../types';
 import Message from './Message';
@@ -24,7 +23,7 @@ const ChatView: React.FC = () => {
 
   useEffect(() => {
     // Reset chat session when thinking mode changes
-    chatSessionRef.current = createChatSession(isThinkingMode);
+    chatSessionRef.current = null;
     setMessages([]);
   }, [isThinkingMode]);
 
